@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Vector;
+
+import javax.lang.model.type.NullType;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
@@ -768,7 +770,7 @@ public class theRobot extends JFrame {
             int maxAction = 0;
             boolean isSelected = false;
             for (int i = 0; i < actionProbs.length; i++) {
-                // System.out.print(actionProbs[i] + " ");
+                System.out.print(actionProbs[i] + " ");
                 if (actionProbs[i] >= actionProbs[maxAction]) {
                     maxAction = i;
                 }
@@ -776,7 +778,7 @@ public class theRobot extends JFrame {
                     isSelected = true;
                 }
             }
-            // System.out.println("");
+            System.out.println("");
             if (isSelected) {
                 return maxAction;
             } else {
@@ -787,16 +789,10 @@ public class theRobot extends JFrame {
             }
 
         } else if (this.pathFindAlg.equals("mcts")) {
-            //Approach 4: use a variation of mcts to get the probability of making it to the end
-        } else if (this.pathFindAlg.equals("rrt")) {
-            //Approach 5: rapid randomly expanding trees. Treat the robots position as a float initially
-            //  and find the paths to the goal. Round placement of explored positions to the sections they coorespond with.
-            // Move backwards in tree if not on the correct path.
-        } else if (this.pathFindAlg.equals("rrtstr")) {
-            //Approach 6: same as Approach 6 but with some reformatting inbetween
+            //Approach 4: use a variation of mcts to get the probability of making it to the end for a certain action
+
+            return getMctsAction();
         }
-
-
 
         return 0; //By default just go upwards
     }
@@ -1082,8 +1078,8 @@ public class theRobot extends JFrame {
         }
 
         //Debug: uncomment for generated action graphs
-        printActionBoard(compActs);
-        System.out.println();
+        // printActionBoard(compActs);
+        // System.out.println();
 
         //follow the path to a goal and return the action to go to that goal (there may be multiple goal but one of us)
 
@@ -1112,6 +1108,60 @@ public class theRobot extends JFrame {
         } else if (reverseAction == WEST) {
             return EAST;
         }
+        return 0;
+    }
+
+    int getMctsAction() {
+        //Once an action is chosen for every location, add up the probabilities of moving a certain direction
+        // Calculated off of the first node
+        int maxIterations = 1000;
+        int[][] visited = new int[mundo.width][mundo.height];
+        //initialize to all 0's
+        for (int c = 0; c < mundo.width; c++) {
+            for (int r = 0; r < mundo.height; r++) {
+                visited[c][r] = 0;
+            }
+        }
+        //Add up the probabilities for each location
+        double[] actionProbs = {0, 0, 0, 0, 0};
+        boolean firstIter = true;
+        for (int c = 1; c < mundo.width; c++) {
+            for (int r = 1; r < mundo.height; r++) {
+                if (firstIter) {
+                    firstIter = false;
+
+                    //Run through MCTS for a specific location
+                    MCTSNode root = new MCTSNode(this.mundo.grid, c, r, visited);
+
+                    //Select and expand
+                    MCTSNode selectedNode = root.select();
+                    // Simulate + back propagate
+                    selectedNode.simulate();
+
+                    // if (selectedNode.parent != null) {
+                    //     selectedNode.parent.backpropogate();
+                    // }
+
+                    // for (int i = 0; i < maxIterations; i++) {
+                    //     //Select and expand
+                    //     MCTSNode selectedNode = root.select();
+                    //     //Simulate + back propagate
+                    //     selectedNode.simulate();
+
+                    //     if (selectedNode.parent != null) {
+                    //         selectedNode.parent.backpropogate();
+                    //     }
+                    // }
+
+                    root.printTree();
+                    System.out.println();
+                }
+
+            }
+        }
+        //Have
+        //this.probs //probability of where we are
+
         return 0;
     }
     
@@ -1185,3 +1235,5 @@ class PositionComparator implements Comparator<int[]> {
         return 0;
     }
 }
+
+
